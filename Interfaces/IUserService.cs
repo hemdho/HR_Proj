@@ -7,6 +7,8 @@ namespace HR.WebApi.Interfaces
     {
         IEnumerable<T> GetAll(int RecordLimit);
 
+        IEnumerable<T> FindPaginated(int pageIndex, int pageSize, string searchValue);
+
         T GetUserById(int id);
 
         T GetUserByLoginId(string loginId);
@@ -17,9 +19,6 @@ namespace HR.WebApi.Interfaces
 
         bool UserExist(T entity);
 
-        IEnumerable<T> FindUserById(int id);
-        IEnumerable<T> FindUserByLogInId(string loginId);
-
         string ChangePassword(int id, string oldPassword, string newPassword);
 
         void AdminChangePassword(string loginId, string password);
@@ -27,8 +26,6 @@ namespace HR.WebApi.Interfaces
         void ActivateUser(int id); //ToogleStatus
 
         void InactivateUser(int id); //ToogleStatus      
-
-        IEnumerable<T> FindPaginated(int pageIndex, int pageSize, string searchValue);
 
         User_Response SignIn(User_Request user_Request);
 

@@ -8,6 +8,8 @@ namespace HR.WebApi.Interfaces
 {
     public interface IUser_Password
     {
+        bool AddUser_Password(int id, string password);
+
         bool ChangePassword(int id, string oldPassword, string newPassword,string oldEncyPassword);
 
         void AdminChangePassword(int loginId, string password);
@@ -17,10 +19,5 @@ namespace HR.WebApi.Interfaces
         bool VerifyPassword(string password, string cryptPass); //verify with crypt
 
         string GeneratePassword(string password); //Generate Encrypted Password
-
-        IEnumerable<User_Password> GetUser_Password(int id);
-
-        bool Insert(int id, string password);
-
     }
 }
