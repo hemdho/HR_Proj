@@ -16,14 +16,26 @@ namespace HR.WebApi.Repositories
             adbContext = Startup.applicationDbContext;
         }
 
+        public IEnumerable<User_Password> GetUser_Password(int id)
+        {
+            try
+            {
+                return adbContext.user_password.Where(w => w.User_Id == id).ToList();
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
         //Create new user_password & verify 5 password only which are not same
-        public bool Insert(int userId, string password)
+        public bool AddUser_Password(int userId, string password)
         {
             bool blnInserted = false;
             try
             {
                 var vList = GetUser_Password(userId);
-                if (vList.Count() > 0)
+                if (vList.Count() > 0) //old pwd exists then verify past 5 pwd
                 {
                     var vCount = vList.OrderByDescending(w => w.AddedOn).Skip(4);
                     adbContext.user_password.RemoveRange(vCount);
@@ -34,7 +46,7 @@ namespace HR.WebApi.Repositories
                         blnInserted = AddNewUserPassword(userId, password);
                     }
                 }
-                else
+                else //add first time pwd
                 {
                     blnInserted = AddNewUserPassword(userId, password);
                 }
@@ -51,14 +63,14 @@ namespace HR.WebApi.Repositories
         {
             try
             {
-                var vUserPassword = new User_Password
+                var vList = new User_Password
                 {
                     User_Id = userId,
                     Password = GeneratePassword(password),
                     AddedBy = userId,
                     AddedOn = DateTime.Now
                 };
-                adbContext.user_password.Add(vUserPassword);
+                adbContext.user_password.Add(vList);
                 adbContext.SaveChanges();
                 return true;
             }
@@ -89,18 +101,6 @@ namespace HR.WebApi.Repositories
             return blnExist;
         }
 
-        public IEnumerable<User_Password> GetUser_Password(int id)
-        {
-            try
-            {
-                return adbContext.user_password.Where(w => w.User_Id == id).ToList();
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
         public bool ChangePassword(int id, string oldPassword, string newPassword, string oldEncyPassword)
         {
             bool blnInserted = false;
@@ -108,7 +108,7 @@ namespace HR.WebApi.Repositories
             {
                 if (VerifyPassword(oldPassword, oldEncyPassword))
                 {
-                    if(Insert(id, newPassword))
+                    if(AddUser_Password(id, newPassword))
                     {
                         blnInserted = true;
                     }                    

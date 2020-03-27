@@ -49,7 +49,7 @@ namespace HR.WebApi.Repositories
         {
             try
             {
-                return adbContext.users.Where(w => w.User_Id == id && w.isActive == 1).SingleOrDefault();
+                return adbContext.users.Where(w => w.User_Id == id).SingleOrDefault();
             }
             catch (Exception ex)
             {
@@ -62,7 +62,7 @@ namespace HR.WebApi.Repositories
         {
             try
             {
-                return adbContext.users.Where(w => w.Login_Id == login_Id && w.isActive == 1).SingleOrDefault();
+                return adbContext.users.Where(w => w.Login_Id == login_Id).SingleOrDefault();
             }
             catch (Exception ex)
             {
@@ -85,7 +85,7 @@ namespace HR.WebApi.Repositories
                 adbContext.users.Add(entity);
                 adbContext.SaveChanges();
 
-                user_PasswordRepository.Insert(entity.User_Id, entity.Password);
+                user_PasswordRepository.AddUser_Password(entity.User_Id, entity.Password);
 
                 adbContext.CommitTransaction();
             }
@@ -101,7 +101,7 @@ namespace HR.WebApi.Repositories
             adbContext.BeginTransaction();
             try
             {
-                if (user_PasswordRepository.Insert(entity.User_Id, entity.Password))
+                if (user_PasswordRepository.AddUser_Password(entity.User_Id, entity.Password))
                 {
                     entity.UpdatedOn = DateTime.Now;
 
@@ -127,30 +127,6 @@ namespace HR.WebApi.Repositories
                 else
                     intCount = adbContext.users.Where(w => w.Login_Id == entity.Login_Id).Count();
                 return (intCount > 0 ? true : false);
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-        public IEnumerable<User> FindUserById(int id)
-        {
-            try
-            {
-                return adbContext.users.Where(w => w.User_Id.ToString().Contains(id.ToString())).ToList();
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-        public IEnumerable<User> FindUserByLogInId(string login_Id)
-        {
-            try
-            {
-                return adbContext.users.Where(w => w.Login_Id.Contains(login_Id)).ToList();
             }
             catch (Exception ex)
             {
@@ -243,17 +219,16 @@ namespace HR.WebApi.Repositories
         {
             try
             {
-                User user = GetUserByLoginId(login_Id);
-                user.Password = user_PasswordRepository.GeneratePassword(password);
-                user.PasswordExpiryDate = DateTime.Now;
+                var vList = GetUserByLoginId(login_Id);
+                vList.Password = user_PasswordRepository.GeneratePassword(password);
+                vList.PasswordExpiryDate = DateTime.Now;
+                vList.UpdatedOn = DateTime.Now;
 
-                user.UpdatedOn = DateTime.Now;
-
-                adbContext.users.Update(user);
+                adbContext.users.Update(vList);
                 adbContext.SaveChanges();
-                user_PasswordRepository.AdminChangePassword(user.User_Id, password);
+                user_PasswordRepository.AdminChangePassword(vList.User_Id, password);
                 //  remove token
-                tokenService.Delete(user.User_Id);
+                tokenService.Delete(vList.User_Id);
             }
             catch (Exception ex)
             {
@@ -283,7 +258,7 @@ namespace HR.WebApi.Repositories
             try
             {
                 var vList = GetUserByLoginId(userRequest.Login_Id);
-                if (vList != null)
+                if (vList != null && vList.isActive == 1)
                 {
                     objUserResponse.isAvailable = true;
                     bool blnVerify = user_PasswordRepository.VerifyPassword(userRequest.Password, vList.Password.ToString());
